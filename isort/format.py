@@ -64,8 +64,8 @@ def show_unified_diff(
     unified_diff_lines = unified_diff(
         file_input.splitlines(keepends=True),
         file_output.splitlines(keepends=True),
-        fromfile=file_name + ":before",
-        tofile=file_name + ":after",
+        fromfile=f"{file_name}:before",
+        tofile=f"{file_name}:after",
         fromfiledate=file_mtime,
         tofiledate=str(datetime.now()),
     )
@@ -86,8 +86,7 @@ def ask_whether_to_apply_changes_to_file(file_path: str) -> bool:
 
 
 def remove_whitespace(content: str, line_separator: str = "\n") -> str:
-    content = content.replace(line_separator, "").replace(" ", "").replace("\x0c", "")
-    return content
+    return content.replace(line_separator, "").replace(" ", "").replace("\x0c", "")
 
 
 class BasicPrinter:
@@ -122,9 +121,7 @@ class ColoramaPrinter(BasicPrinter):
 
     @staticmethod
     def style_text(text: str, style: Optional[str] = None) -> str:
-        if style is None:
-            return text
-        return style + text + str(colorama.Style.RESET_ALL)
+        return text if style is None else style + text + str(colorama.Style.RESET_ALL)
 
     def diff_line(self, line: str) -> None:
         style = None

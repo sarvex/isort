@@ -137,15 +137,14 @@ def imports(
                                 break
                             line, _ = parse_comments(next_line)
                             import_string += "\n" + line
-                    else:
-                        if import_string.strip().endswith(
+                    elif import_string.strip().endswith(
                             (" import", " cimport")
                         ) or line.strip().startswith(("import ", "cimport ")):
-                            import_string += "\n" + line
-                        else:
-                            import_string = (
-                                import_string.rstrip().rstrip("\\") + " " + line.lstrip()
-                            )
+                        import_string += "\n" + line
+                    else:
+                        import_string = (
+                            import_string.rstrip().rstrip("\\") + " " + line.lstrip()
+                        )
 
             if type_of_import == "from":
                 import_string = (
@@ -157,7 +156,8 @@ def imports(
 
                 from_import = parts[0].split(" ")
                 import_string = (" cimport " if cimports else " import ").join(
-                    [from_import[0] + " " + "".join(from_import[1:])] + parts[1:]
+                    [f"{from_import[0]} " + "".join(from_import[1:])]
+                    + parts[1:]
                 )
 
             just_imports = [
@@ -171,11 +171,11 @@ def imports(
                 while "as" in just_imports:
                     attribute = None
                     as_index = just_imports.index("as")
+                    alias = just_imports[as_index + 1]
                     if type_of_import == "from":
                         attribute = just_imports[as_index - 1]
                         top_level_module = just_imports[0]
-                        module = top_level_module + "." + attribute
-                        alias = just_imports[as_index + 1]
+                        module = f"{top_level_module}.{attribute}"
                         direct_imports.remove(attribute)
                         direct_imports.remove(alias)
                         direct_imports.remove("as")
@@ -187,7 +187,6 @@ def imports(
 
                     else:
                         module = just_imports[as_index - 1]
-                        alias = just_imports[as_index + 1]
                         just_imports.remove(alias)
                         just_imports.remove("as")
                         just_imports.remove(module)

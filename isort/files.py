@@ -23,9 +23,8 @@ def find(
                     if config.is_skipped(full_path):
                         skipped.append(dirname)
                         dirnames.remove(dirname)
-                    else:
-                        if resolved_path in visited_dirs:  # pragma: no cover
-                            dirnames.remove(dirname)
+                    elif resolved_path in visited_dirs:  # pragma: no cover
+                        dirnames.remove(dirname)
                     visited_dirs.add(resolved_path)
 
                 for filename in filenames:

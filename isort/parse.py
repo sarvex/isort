@@ -31,9 +31,7 @@ if TYPE_CHECKING:
 def _infer_line_separator(contents: str) -> str:
     if "\r\n" in contents:
         return "\r\n"
-    if "\r" in contents:
-        return "\r"
-    return "\n"
+    return "\r" if "\r" in contents else "\n"
 
 
 def _normalize_line(raw_line: str) -> Tuple[str, str]:
@@ -58,9 +56,7 @@ def import_type(line: str, config: Config = DEFAULT_CONFIG) -> Optional[str]:
         return None
     if line.startswith(("import ", "cimport ")):
         return "straight"
-    if line.startswith("from "):
-        return "from"
-    return None
+    return "from" if line.startswith("from ") else None
 
 
 def _strip_syntax(import_string: str) -> str:

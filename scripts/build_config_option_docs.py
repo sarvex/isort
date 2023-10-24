@@ -350,9 +350,7 @@ def config_default(default: Any) -> str:
     if default_str in CONFIG_DEFAULTS:
         return CONFIG_DEFAULTS[default_str]
 
-    if default_str.startswith("py"):
-        return default_str[2:]
-    return default_str
+    return default_str[2:] if default_str.startswith("py") else default_str
 
 
 def human(name: str) -> str:
@@ -370,8 +368,7 @@ def config_options() -> Generator[ConfigOption, None, None]:
         extra_kwargs = {}
         description: Optional[str] = description_mapping.get(name, None)
 
-        cli = cli_actions.pop(name, None)
-        if cli:
+        if cli := cli_actions.pop(name, None):
             extra_kwargs["cli_options"] = cli.option_strings
             if cli.help and not description:
                 description = cli.help

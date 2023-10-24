@@ -36,7 +36,7 @@ def _forced_separate(name: str, config: Config) -> Optional[Tuple[str, str]]:
         if not forced_separate.endswith("*"):
             path_glob = f"{forced_separate}*"
 
-        if fnmatch(name, path_glob) or fnmatch(name, "." + path_glob):
+        if fnmatch(name, path_glob) or fnmatch(name, f".{path_glob}"):
             return (forced_separate, f"Matched forced_separate ({forced_separate}) config value.")
 
     return None
@@ -115,16 +115,7 @@ def _is_namespace_package(path: Path, src_extensions: FrozenSet[str]) -> bool:
         return False
 
     init_file = path / "__init__.py"
-    if not init_file.exists():
-        filenames = [
-            filepath
-            for filepath in path.iterdir()
-            if filepath.suffix.lstrip(".") in src_extensions
-            or filepath.name.lower() in ("setup.cfg", "pyproject.toml")
-        ]
-        if filenames:
-            return False
-    else:
+    if init_file.exists():
         with init_file.open("rb") as open_init_file:
             file_start = open_init_file.read(4096)
             if (
@@ -136,6 +127,13 @@ def _is_namespace_package(path: Path, src_extensions: FrozenSet[str]) -> bool:
                 not in file_start
             ):
                 return False
+    elif filenames := [
+        filepath
+        for filepath in path.iterdir()
+        if filepath.suffix.lstrip(".") in src_extensions
+        or filepath.name.lower() in ("setup.cfg", "pyproject.toml")
+    ]:
+        return False
     return True
 
 

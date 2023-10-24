@@ -572,42 +572,35 @@ def parse_value(src: str, pos: Pos, parse_float: ParseFloat) -> Tuple[Pos, Any]:
         char = None
 
     # Basic strings
-    if char == '"':
-        if src.startswith('"""', pos):
-            return parse_multiline_str(src, pos, literal=False)
-        return parse_one_line_basic_str(src, pos)
-
-    # Literal strings
     if char == "'":
-        if src.startswith("'''", pos):
-            return parse_multiline_str(src, pos, literal=True)
-        return parse_literal_str(src, pos)
-
-    # Booleans
-    if char == "t":
-        if src.startswith("true", pos):
-            return pos + 4, True
-    if char == "f":
+        return (
+            parse_multiline_str(src, pos, literal=True)
+            if src.startswith("'''", pos)
+            else parse_literal_str(src, pos)
+        )
+    elif char == "f":
         if src.startswith("false", pos):
             return pos + 5, False
 
-    # Dates and times
-    datetime_match = RE_DATETIME.match(src, pos)
-    if datetime_match:
+    elif char == "t":
+        if src.startswith("true", pos):
+            return pos + 4, True
+    elif char == '"':
+        return (
+            parse_multiline_str(src, pos, literal=False)
+            if src.startswith('"""', pos)
+            else parse_one_line_basic_str(src, pos)
+        )
+    if datetime_match := RE_DATETIME.match(src, pos):
         try:
             datetime_obj = match_to_datetime(datetime_match)
         except ValueError:
             raise suffixed_err(src, pos, "Invalid date or datetime")
         return datetime_match.end(), datetime_obj
-    localtime_match = RE_LOCALTIME.match(src, pos)
-    if localtime_match:
+    if localtime_match := RE_LOCALTIME.match(src, pos):
         return localtime_match.end(), match_to_localtime(localtime_match)
 
-    # Integers and "normal" floats.
-    # The regex will greedily match any type starting with a decimal
-    # char, so needs to be located after handling of dates and times.
-    number_match = RE_NUMBER.match(src, pos)
-    if number_match:
+    if number_match := RE_NUMBER.match(src, pos):
         return number_match.end(), match_to_number(number_match, parse_float)
 
     # Arrays
@@ -637,10 +630,7 @@ def suffixed_err(src: str, pos: Pos, msg: str) -> TOMLDecodeError:
         if pos >= len(src):
             return "end of document"
         line = src.count("\n", 0, pos) + 1
-        if line == 1:
-            column = pos + 1
-        else:
-            column = pos - src.rindex("\n", 0, pos)
+        column = pos + 1 if line == 1 else pos - src.rindex("\n", 0, pos)
         return f"line {line}, column {column}"
 
     return TOMLDecodeError(f"{msg} (at {coord_repr(src, pos)})")

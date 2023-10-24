@@ -65,7 +65,7 @@ def configs(**force_strategies: st.SearchStrategy[isort.Config]) -> st.SearchStr
         "profile": st.sampled_from(sorted(isort.settings.profiles)),
         "py_version": st.sampled_from(("auto",) + isort.settings.VALID_PY_TARGETS),
     }
-    kwargs = {**inferred_kwargs, **specific, **force_strategies}
+    kwargs = inferred_kwargs | specific | force_strategies
     return st.fixed_dictionaries({}, optional=kwargs).map(_as_config)  # type: ignore
 
 

@@ -25,8 +25,7 @@ class ISortCommand(setuptools.Command):  # type: ignore
 
     def finalize_options(self) -> None:
         """Get options from config files."""
-        self.arguments: Dict[str, Any] = {}  # skipcq: PYL-W0201
-        self.arguments["settings_path"] = os.getcwd()
+        self.arguments: Dict[str, Any] = {"settings_path": os.getcwd()}
 
     def distribution_files(self) -> Iterator[str]:
         """Find distribution packages."""
