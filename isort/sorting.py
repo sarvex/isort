@@ -18,17 +18,12 @@ def module_key(
     section_name: Optional[Any] = None,
     straight_import: Optional[bool] = False,
 ) -> str:
-    match = re.match(r"^(\.+)\s*(.*)", module_name)
-    if match:
+    if match := re.match(r"^(\.+)\s*(.*)", module_name):
         sep = " " if config.reverse_relative else "_"
         module_name = sep.join(match.groups())
 
     prefix = ""
-    if ignore_case:
-        module_name = str(module_name).lower()
-    else:
-        module_name = str(module_name)
-
+    module_name = module_name.lower() if ignore_case else module_name
     if sub_imports and config.order_by_type:
         if module_name in config.constants:
             prefix = "A"
@@ -38,7 +33,7 @@ def module_key(
             prefix = "C"
         elif module_name.isupper() and len(module_name) > 1:  # see issue #376
             prefix = "A"
-        elif module_name in config.classes or module_name[0:1].isupper():
+        elif module_name in config.classes or module_name[:1].isupper():
             prefix = "B"
         else:
             prefix = "C"
@@ -50,20 +45,19 @@ def module_key(
         or (config.length_sort_straight and straight_import)
         or str(section_name).lower() in config.length_sort_sections
     )
-    _length_sort_maybe = (str(len(module_name)) + ":" + module_name) if length_sort else module_name
+    _length_sort_maybe = (
+        f"{len(module_name)}:{module_name}" if length_sort else module_name
+    )
     return f"{module_name in config.force_to_top and 'A' or 'B'}{prefix}{_length_sort_maybe}"
 
 
 def section_key(line: str, config: Config) -> str:
-    section = "B"
-
     if (
         not config.sort_relative_in_force_sorted_sections
         and config.reverse_relative
         and line.startswith("from .")
     ):
-        match = re.match(r"^from (\.+)\s*(.*)", line)
-        if match:  # pragma: no cover - regex always matches if line starts with "from ."
+        if match := re.match(r"^from (\.+)\s*(.*)", line):
             line = f"from {' '.join(match.groups())}"
     if config.group_by_package and line.strip().startswith("from"):
         line = line.split(" import", 1)[0]
@@ -76,8 +70,7 @@ def section_key(line: str, config: Config) -> str:
     if config.sort_relative_in_force_sorted_sections:
         sep = " " if config.reverse_relative else "_"
         line = re.sub(r"^(\.+)", rf"\1{sep}", line)
-    if line.split(" ")[0] in config.force_to_top:
-        section = "A"
+    section = "A" if line.split(" ")[0] in config.force_to_top else "B"
     # * If honor_case_in_force_sorted_sections is true, and case_sensitive and
     #   order_by_type are different, only ignore case in part of the line.
     # * Otherwise, let order_by_type decide the sorting of the whole line. This

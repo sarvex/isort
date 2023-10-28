@@ -42,10 +42,7 @@ def import_statement(
     if config.balanced_wrapping:
         lines = statement.split(line_separator)
         line_count = len(lines)
-        if len(lines) > 1:
-            minimum_length = min(len(line) for line in lines[:-1])
-        else:
-            minimum_length = 0
+        minimum_length = min(len(line) for line in lines[:-1]) if len(lines) > 1 else 0
         new_import_statement = statement
         while len(lines[-1]) < minimum_length and len(lines) == line_count and line_length > 10:
             statement = new_import_statement
@@ -134,10 +131,10 @@ def line(content: str, line_separator: str, config: Config = DEFAULT_CONFIG) -> 
                     lines = output.split(line_separator)
                     if config.comment_prefix in lines[-1] and lines[-1].endswith(")"):
                         content, comment = lines[-1].split(config.comment_prefix, 1)
-                        lines[-1] = content + ")" + config.comment_prefix + comment[:-1]
+                        lines[-1] = f"{content}){config.comment_prefix}{comment[:-1]}"
                     return line_separator.join(lines)
                 return f"{content}{splitter}\\{line_separator}{cont_line}"
-    elif len(content) > config.line_length and wrap_mode == Modes.NOQA and "# NOQA" not in content:  # type: ignore
+    elif len(content) > config.line_length and "# NOQA" not in content:  # type: ignore
         return f"{content}{config.comment_prefix} NOQA"
 
     return content

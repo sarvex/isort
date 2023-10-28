@@ -9,7 +9,7 @@ _wrap_modes: Dict[str, Callable[..., str]] = {}
 
 
 def from_string(value: str) -> "WrapModes":
-    return getattr(WrapModes, str(value), None) or WrapModes(int(value))
+    return getattr(WrapModes, value, None) or WrapModes(int(value))
 
 
 def formatter_from_string(name: str) -> Callable[..., str]:
@@ -79,7 +79,7 @@ def grid(**interface: Any) -> str:
             )
             interface["comments"] = []
         else:
-            interface["statement"] += ", " + next_import
+            interface["statement"] += f", {next_import}"
     return f"{interface['statement']}{',' if interface['include_trailing_comma'] else ''})"
 
 
@@ -222,7 +222,7 @@ def _vertical_grid_common(need_trailing_char: bool, **interface: Any) -> str:
 
 @_wrap_mode
 def vertical_grid(**interface: Any) -> str:
-    return _vertical_grid_common(need_trailing_char=True, **interface) + ")"
+    return f"{_vertical_grid_common(need_trailing_char=True, **interface)})"
 
 
 @_wrap_mode
@@ -245,8 +245,8 @@ def vertical_grid_grouped_no_comma(**interface: Any) -> str:
 def noqa(**interface: Any) -> str:
     _imports = ", ".join(interface["imports"])
     retval = f"{interface['statement']}{_imports}"
-    comment_str = " ".join(interface["comments"])
     if interface["comments"]:
+        comment_str = " ".join(interface["comments"])
         if (
             len(retval) + len(interface["comment_prefix"]) + 1 + len(comment_str)
             <= interface["line_length"]
@@ -281,7 +281,7 @@ def vertical_prefix_from_module_import(**interface: Any) -> str:
     statement = output_statement
     statement_with_comments = ""
     for next_import in interface["imports"]:
-        statement = statement + ", " + next_import
+        statement = f"{statement}, {next_import}"
         statement_with_comments = isort.comments.add_to_line(
             comments,
             statement,
@@ -335,7 +335,7 @@ def hanging_indent_with_parentheses(**interface: Any) -> str:
     while interface["imports"]:
         next_import = interface["imports"].pop(0)
         if (
-            not interface["line_separator"] in interface["statement"]
+            interface["line_separator"] not in interface["statement"]
             and "#" in interface["statement"]
         ):  # pragma: no cover # TODO: fix, this is because of test run inconsistency.
             line, comments = interface["statement"].split("#", 1)

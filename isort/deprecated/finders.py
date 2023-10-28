@@ -59,16 +59,16 @@ class ForcedSeparateFinder(BaseFinder):
             if not forced_separate.endswith("*"):
                 path_glob = f"{forced_separate}*"
 
-            if fnmatch(module_name, path_glob) or fnmatch(module_name, "." + path_glob):
+            if fnmatch(module_name, path_glob) or fnmatch(
+                module_name, f".{path_glob}"
+            ):
                 return forced_separate
         return None
 
 
 class LocalFinder(BaseFinder):
     def find(self, module_name: str) -> Optional[str]:
-        if module_name.startswith("."):
-            return "LOCALFOLDER"
-        return None
+        return "LOCALFOLDER" if module_name.startswith(".") else None
 
 
 class KnownPatternFinder(BaseFinder):
@@ -93,16 +93,19 @@ class KnownPatternFinder(BaseFinder):
 
     def _parse_known_pattern(self, pattern: str) -> List[str]:
         """Expand pattern if identified as a directory and return found sub packages"""
-        if pattern.endswith(os.path.sep):
-            patterns = [
+        return (
+            [
                 filename
-                for filename in os.listdir(os.path.join(self.config.directory, pattern))
-                if os.path.isdir(os.path.join(self.config.directory, pattern, filename))
+                for filename in os.listdir(
+                    os.path.join(self.config.directory, pattern)
+                )
+                if os.path.isdir(
+                    os.path.join(self.config.directory, pattern, filename)
+                )
             ]
-        else:
-            patterns = [pattern]
-
-        return patterns
+            if pattern.endswith(os.path.sep)
+            else [pattern]
+        )
 
     def find(self, module_name: str) -> Optional[str]:
         # Try to find most specific placement instruction match (if any)
@@ -167,12 +170,12 @@ class PathFinder(BaseFinder):
             package_path = "/".join((prefix, module_name.split(".")[0]))
             path_obj = Path(package_path).resolve()
             is_module = (
-                exists_case_sensitive(package_path + ".py")
+                exists_case_sensitive(f"{package_path}.py")
                 or any(
                     exists_case_sensitive(package_path + ext_suffix)
                     for ext_suffix in importlib.machinery.EXTENSION_SUFFIXES
                 )
-                or exists_case_sensitive(package_path + "/__init__.py")
+                or exists_case_sensitive(f"{package_path}/__init__.py")
             )
             is_package = exists_case_sensitive(package_path) and os.path.isdir(package_path)
             if is_module or is_package:
@@ -238,8 +241,7 @@ class ReqsBaseFinder(BaseFinder):
         """Return list of thirdparty modules from requirements"""
         names = []
         for path in self._get_files():
-            for name in self._get_names(path):
-                names.append(self._normalize_name(name))
+            names.extend(self._normalize_name(name) for name in self._get_names(path))
         return names
 
     @staticmethod
@@ -277,14 +279,17 @@ class ReqsBaseFinder(BaseFinder):
             return None
 
         module_name, _sep, _submodules = module_name.partition(".")
-        module_name = module_name.lower()
-        if not module_name:
+        if module_name := module_name.lower():
+            return next(
+                (
+                    sections.THIRDPARTY
+                    for name in self.names
+                    if module_name == name
+                ),
+                None,
+            )
+        else:
             return None
-
-        for name in self.names:
-            if module_name == name:
-                return sections.THIRDPARTY
-        return None
 
 
 class RequirementsFinder(ReqsBaseFinder):
@@ -308,9 +313,11 @@ class RequirementsFinder(ReqsBaseFinder):
             # *requirements*/*.{txt,in}
             if os.path.isdir(full_path):
                 for subfile_name in os.listdir(full_path):
-                    for ext in cls.exts:
-                        if subfile_name.endswith(ext):
-                            results.append(os.path.join(full_path, subfile_name))
+                    results.extend(
+                        os.path.join(full_path, subfile_name)
+                        for ext in cls.exts
+                        if subfile_name.endswith(ext)
+                    )
                 continue
 
             # *requirements*.{txt,in}
@@ -333,10 +340,7 @@ class RequirementsFinder(ReqsBaseFinder):
 
         with chdir(os.path.dirname(path)):
             requirements = parse_requirements(Path(path))
-            for req in requirements.values():
-                if req.name:
-                    result.append(req.name)
-
+            result.extend(req.name for req in requirements.values() if req.name)
         return result
 
 

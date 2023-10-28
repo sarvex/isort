@@ -29,9 +29,13 @@ class TestFindersManager:
         assert FindersManager(settings.DEFAULT_CONFIG, []).find("isort") is None
 
     def test_find_broken_finder(self):
+
+
+
         class ExceptionOnFind(finders.BaseFinder):
-            def find(*args, **kwargs):
+            def find(self, **kwargs):
                 raise ValueError("test")
+
 
         assert (
             FindersManager(settings.Config(verbose=True), [ExceptionOnFind]).find("isort") is None
@@ -154,7 +158,7 @@ def test_path_finder(monkeypatch) -> None:
     }
     imaginary_paths.update(
         {
-            posixpath.join(third_party_prefix, "example_" + str(i) + ext_suffix)
+            posixpath.join(third_party_prefix, f"example_{str(i)}{ext_suffix}")
             for i, ext_suffix in enumerate(ext_suffixes, 4)
         }
     )
@@ -166,4 +170,4 @@ def test_path_finder(monkeypatch) -> None:
     assert finder.find("example_2") == sections.THIRDPARTY
     assert finder.find("example_3") == settings.DEFAULT_CONFIG.default_section
     for i, _ in enumerate(ext_suffixes, 4):
-        assert finder.find("example_" + str(i)) == sections.THIRDPARTY
+        assert finder.find(f"example_{str(i)}") == sections.THIRDPARTY

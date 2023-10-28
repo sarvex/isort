@@ -440,7 +440,7 @@ class Config(_Config):
             if section in SECTION_DEFAULTS:
                 continue
 
-            if not section.lower() in known_other:
+            if section.lower() not in known_other:
                 config_keys = ", ".join(known_other.keys())
                 warn(
                     f"`sections` setting includes {section}, but no known_{section.lower()} "
@@ -487,10 +487,9 @@ class Config(_Config):
         combined_config.pop("sources", None)
         combined_config.pop("runtime_src_paths", None)
 
-        deprecated_options_used = [
+        if deprecated_options_used := [
             option for option in combined_config if option in DEPRECATED_SETTINGS
-        ]
-        if deprecated_options_used:
+        ]:
             for deprecated_option in deprecated_options_used:
                 combined_config.pop(deprecated_option)
             if not quiet:
@@ -616,7 +615,9 @@ class Config(_Config):
             position = os.path.split(position[0])
 
         for sglob in self.skip_globs:
-            if fnmatch.fnmatch(file_name, sglob) or fnmatch.fnmatch("/" + file_name, sglob):
+            if fnmatch.fnmatch(file_name, sglob) or fnmatch.fnmatch(
+                f"/{file_name}", sglob
+            ):
                 return True
 
         if not (os.path.isfile(os_path) or os.path.isdir(os_path) or os.path.islink(os_path)):
@@ -728,16 +729,15 @@ class Config(_Config):
 
     def _parse_known_pattern(self, pattern: str) -> List[str]:
         """Expand pattern if identified as a directory and return found sub packages"""
-        if pattern.endswith(os.path.sep):
-            patterns = [
+        return (
+            [
                 filename
                 for filename in os.listdir(os.path.join(self.directory, pattern))
                 if os.path.isdir(os.path.join(self.directory, pattern, filename))
             ]
-        else:
-            patterns = [pattern]
-
-        return patterns
+            if pattern.endswith(os.path.sep)
+            else [pattern]
+        )
 
 
 def _get_str_to_type_converter(setting_name: str) -> Union[Callable[[str], Any], Type[Any]]:
@@ -752,18 +752,20 @@ def _get_str_to_type_converter(setting_name: str) -> Union[Callable[[str], Any],
 def _as_list(value: str) -> List[str]:
     if isinstance(value, list):
         return [item.strip() for item in value]
-    filtered = [item.strip() for item in value.replace("\n", ",").split(",") if item.strip()]
-    return filtered
+    return [
+        item.strip()
+        for item in value.replace("\n", ",").split(",")
+        if item.strip()
+    ]
 
 
 def _abspaths(cwd: str, values: Iterable[str]) -> Set[str]:
-    paths = {
+    return {
         os.path.join(cwd, value)
         if not value.startswith(os.path.sep) and value.endswith(os.path.sep)
         else value
         for value in values
     }
-    return paths
 
 
 def _find_config(path: str) -> Tuple[str, Dict[str, Any]]:

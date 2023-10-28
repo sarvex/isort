@@ -60,7 +60,7 @@ def configs() -> st.SearchStrategy[isort.Config]:
         "sort_order": st.sampled_from(sorted(("native", "natural", "natural_plus"))),
         "py_version": st.sampled_from(("auto",) + isort.settings.VALID_PY_TARGETS),
     }
-    kwargs = {**inferred_kwargs, **specific}
+    kwargs = inferred_kwargs | specific
     return st.fixed_dictionaries({}, optional=kwargs).map(_as_config)  # type:ignore
 
 

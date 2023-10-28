@@ -726,7 +726,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         "--sd",
         "--section-default",
         dest="default_section",
-        help="Sets the default section for import options: " + str(sections.DEFAULT),
+        help=f"Sets the default section for import options: {str(sections.DEFAULT)}",
     )
     section_group.add_argument(
         "--only-sections",
@@ -947,8 +947,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> Dict[str, Any]:
             sys.exit("Can't set both --float-to-top and --dont-float-to-top.")
         else:
             arguments["float_to_top"] = False
-    multi_line_output = arguments.get("multi_line_output", None)
-    if multi_line_output:
+    if multi_line_output := arguments.get("multi_line_output", None):
         if multi_line_output.isdigit():
             arguments["multi_line_output"] = WrapModes(int(multi_line_output))
         else:
@@ -1053,7 +1052,7 @@ def identify_imports_main(
         elif arguments.unique == api.ImportKey.ATTRIBUTE:
             print(f"{identified_import.module}.{identified_import.attribute}")
         else:
-            print(str(identified_import))
+            print(identified_import)
 
 
 def main(argv: Optional[Sequence[str]] = None, stdin: Optional[TextIOWrapper] = None) -> None:
@@ -1185,7 +1184,6 @@ def main(argv: Optional[Sequence[str]] = None, stdin: Optional[TextIOWrapper] = 
                 print(file_name)
             return
         num_skipped = 0
-        num_broken = 0
         num_invalid_encoding = 0
         if config.verbose:
             print(ASCII_ART)
@@ -1254,7 +1252,7 @@ def main(argv: Optional[Sequence[str]] = None, stdin: Optional[TextIOWrapper] = 
                     )
             print(f"Skipped {num_skipped} files")
 
-        num_broken += len(broken)
+        num_broken = 0 + len(broken)
         if num_broken and not config.quiet:
             if config.verbose:
                 for was_broken in broken:

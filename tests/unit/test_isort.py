@@ -3894,7 +3894,7 @@ def test_broken(tmpdir) -> None:
         for f in files.find(["not-exist"], config, skipped, broken)
     }
     assert len(broken) == 1
-    assert file_names == set()
+    assert not file_names
 
 
 def test_comments_not_removed_issue_576() -> None:

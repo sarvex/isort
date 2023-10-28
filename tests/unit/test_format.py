@@ -82,11 +82,11 @@ def test_colored_printer_diff(capsys):
     # No color added to lines with multiple + and -'s
     assert out.startswith("+++ file1\n--- file2\n")
     # Added lines are green
-    assert colorama.Fore.GREEN + "+ added line" in out
+    assert f"{colorama.Fore.GREEN}+ added line" in out
     # Removed lines are red
-    assert colorama.Fore.RED + "- removed line" in out
+    assert f"{colorama.Fore.RED}- removed line" in out
     # Normal lines are reset back
-    assert colorama.Style.RESET_ALL + "normal line" in out
+    assert f"{colorama.Style.RESET_ALL}normal line" in out
 
 
 def test_colored_printer_diff_output(capsys):
